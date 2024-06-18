@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import { getAuth, setAuth } from "./cookie";
 
 type User = {
 	username: string;
 	password: string;
+    fullname: string;
 }
 
 
@@ -45,6 +47,7 @@ export async function login(user: User) {
 export async function checkAuth() {
 
     let token = await getAuth();
+    console.log(token)
 
     const result = await fetch('/api/v1/check',{
         method: 'GET',
@@ -54,8 +57,14 @@ export async function checkAuth() {
         },
     });
 
-    if (result.ok)
+    console.log(result)
+
+    if (result.ok){
+        console.log('ok')
         return true;
+    }
+    
+    console.log('redirect')
     return false;
 }
 

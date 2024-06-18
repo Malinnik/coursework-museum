@@ -40,3 +40,4 @@ async def decode_access(app: Application, header: str, signature: bool = True) -
 
     except Exception as e:
         logging.error(f"Error: {e}")
+        raise HTTPUnauthorized

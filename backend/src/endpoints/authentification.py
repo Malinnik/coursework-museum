@@ -29,13 +29,13 @@ class Login(PydanticView):
             if not check:
                 return web.json_response(Error(error="Неправильный логин или пароль").model_dump(), status=400)
 
-            if (not user.password == check.password):
+            if (not user.password.get_secret_value() == check.password):
                 return web.json_response(Error(error="Неправильный логин или пароль").model_dump(), status=400)
             
 
             access = await encode_access(app, check.id)
 
-            response = web.json_response({"user_token": access}, status=200)
+            response = web.json_response({"user_token": access, "user_id": check.id}, status=200)
 
             # TODO: Make refresh token encoding and sending it to cookie
             # refresh
@@ -63,14 +63,18 @@ class Check(PydanticView):
         app = self.request.app
         try:
             access = self.request.headers.get("Authorization")
+            logging.debug(f"Access:  {access}")
             if not access:
                 return web.json_response(Error(error="No access token").model_dump(), status=401)
             
             await decode_access(app, access)
+            logging.debug(f"Access:  {access}")
 
             return web.json_response(Ok().model_dump(), status=201)            
 
         except web.HTTPUnauthorized:
+            logging.debug(f"Access:  Access token expired")
+            raise web.HTTPFound('/login')
             return web.json_response(Error(error="Access token expired").model_dump(), status=401)
         except Exception as e:
             logging.exception(f"Error: {e}")
